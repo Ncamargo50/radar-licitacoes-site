@@ -1,0 +1,27 @@
+name: Paginas diarias de licitacoes
+
+on:
+  schedule:
+    - cron: "0 9 * * *"  # 06:00 em Brasilia
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  gerar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Gerar paginas a partir do PNCP
+        run: python gerar.py
+      - name: Publicar se mudou
+        run: |
+          git config user.name "radar-bot"
+          git config user.email "radar-bot@users.noreply.github.com"
+          git add licitacoes sitemap.xml robots.txt
+          git diff --cached --quiet || (git commit -m "Paginas de licitacoes $(date -u +%F)" && git push)
